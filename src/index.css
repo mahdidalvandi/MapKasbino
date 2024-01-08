@@ -1,6 +1,12 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-.maplibregl-popup {
+.mapboxgl-popup-tip {
+  max-width: max-content !important ;
+}
+.mapboxgl-popup-content {
+  max-width: max-content !important ;
+}
+.mapboxgl-popup {
   max-width: max-content !important ;
 }

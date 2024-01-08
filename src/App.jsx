@@ -1,4 +1,3 @@
-import React from "react";
 import Map from "./components/map/map";
 import Navbar from "./components/navbar/navbar";
 
@@ -9,7 +8,7 @@ export default function App() {
     },
     xAxis: {
       type: "category",
-      data: ["TInfo", "TInfo1", "TInfo2"],
+      data: ["TInfo", "TInfo1", "TInfo2", "TInfo3", "TInfo4"],
     },
     yAxis: {
       type: "value",
@@ -24,6 +23,11 @@ export default function App() {
         name: "T1",
         type: "line",
         data: [15, 25, 10, 45, 20, 11, 19, 6, 13, 11],
+      },
+      {
+        name: "T3",
+        type: "line",
+        data: [55, 32, 11, 19, 36, 75, 20, 16, 73, 25],
       },
     ],
   };
