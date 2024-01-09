@@ -22,28 +22,24 @@ function PopupContent({ chartOptions, selectedZone, nearbyPoints, onClose }) {
       container: mapContainerRef.current,
       style: "mapbox://styles/mapbox/streets-v11",
       center: [selectedZone.lng, selectedZone.lat],
-      zoom: 15,
+      zoom: 14,
     });
 
-    // Add marker for the selected zone
     const selectedZoneMarker = new mapboxgl.Marker({ color: "#ff0000" })
       .setLngLat([selectedZone.lng, selectedZone.lat])
       .addTo(mapInstance.current);
 
-    // Add markers for nearby points
     nearbyPoints.forEach((point) => {
       new mapboxgl.Marker({ color: "#ff8000" })
         .setLngLat([point.lng, point.lat])
         .addTo(mapInstance.current);
     });
 
-    // Cleanup function for previous instances
     const cleanup = () => {
       if (chartInstance.current) {
         chartInstance.current.dispose();
       }
 
-      // Check if the map container element is still in the DOM
       const mapContainer = mapContainerRef.current;
       if (mapContainer && mapContainer.parentNode) {
         mapInstance.current.remove();
@@ -75,13 +71,26 @@ function PopupContent({ chartOptions, selectedZone, nearbyPoints, onClose }) {
             <ul>
               {nearbyPoints.map((point, index) => (
                 <li key={index}>
-                  Name: {point.name}, Distance: {point.distance} km
+                  Name: {point.name}, Distance:{" "}
+                  <span className="font-bold text-green-700">
+                    {" "}
+                    {point.distance}
+                  </span>{" "}
+                  km
                 </li>
               ))}
             </ul>
           </div>
           <div className="w-3/5 p-1 mt-12 ml-5">
             <div ref={chartContainerRef} style={{ height: "380px" }} />
+            <div>
+              <p className="font-semibold text-right text-blue-500 mb-1">
+                ترافیک خیابان
+              </p>
+              <p className="font-semibold text-right  text-green-500  mb-1">
+                ترافیک اتوبان
+              </p>
+            </div>
           </div>
         </div>
 
