@@ -8,7 +8,7 @@ export default function App() {
     },
     xAxis: {
       type: "category",
-      data: ["TInfo", "TInfo1", "TInfo2", "TInfo3", "TInfo4"],
+      data: ["TInfo", "TInfo1", "TInfo2", "TInfo3", "TInfo4", "TInfo5"],
     },
     yAxis: {
       type: "value",
@@ -31,7 +31,6 @@ export default function App() {
       },
     ],
   };
-
   return (
     <div>
       <Navbar />

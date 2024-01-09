@@ -4,35 +4,74 @@ import * as echarts from "echarts";
 import { createRoot } from "react-dom/client";
 
 import "mapbox-gl/dist/mapbox-gl.css";
+import { points } from "@turf/turf";
 
 function PopupContent({ chartOptions, selectedZone, nearbyPoints, onClose }) {
   const [isOpen, setIsOpen] = useState(true);
-
+  const [selectedMarkerData, setSelectedMarkerData] = useState(null);
   const handleClose = () => {
     setIsOpen(false);
   };
   const chartContainerRef = useRef(null);
   const chartInstance = useRef(null);
+  const mapContainerRef = useRef(null);
+  const mapInstance = useRef(null);
 
   useEffect(() => {
+    // Initialize ECharts chart
     chartInstance.current = echarts.init(chartContainerRef.current);
     chartInstance.current.setOption(chartOptions);
+
+    // Initialize Mapbox GL map
+    mapInstance.current = new mapboxgl.Map({
+      container: mapContainerRef.current,
+      style: "mapbox://styles/mapbox/streets-v11",
+      center: [selectedZone.lng, selectedZone.lat],
+      zoom: 15,
+    });
+
+    // Add marker for the selected zone
+    const selectedZoneMarker = new mapboxgl.Marker({ color: "#ff0000" })
+      .setLngLat([selectedZone.lng, selectedZone.lat])
+      .addTo(mapInstance.current);
+
+    // Add markers for nearby points
+    nearbyPoints.forEach((point) => {
+      new mapboxgl.Marker({ color: "#ff8000" })
+        .setLngLat([point.lng, point.lat])
+        .addTo(mapInstance.current);
+      console.log([point.lng, point.lat]);
+    });
 
     return () => {
       if (chartInstance.current) {
         chartInstance.current.dispose();
       }
+      if (mapInstance.current) {
+        mapInstance.current.remove();
+      }
     };
-  }, [chartOptions]);
+  }, [chartOptions, selectedZone, nearbyPoints]);
 
   return (
     <>
       {isOpen && (
-        <div className="fixed w-5/6 h-4/5 m-2 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-8 z-50">
-          <div className="flex">
+        <div className="fixed w-5/6 h-4/5 m-2 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 z-50">
+          <div className="flex h-fit">
             <div className=" flex-col inline-grid h-fit text-nowrap">
-              <h3>Selected Zone: {selectedZone.name}</h3>
-              <h4>Nearby Points:</h4>
+              <div className=" pb-8 h-fit w-fit">
+                <div
+                  ref={mapContainerRef}
+                  style={{ width: "250px", height: "250px" }}
+                />
+              </div>
+              <h3>
+                Selected Zone:{" "}
+                <p className="font-semibold text-nowrap inline-flex">
+                  {selectedZone.name}
+                </p>
+              </h3>
+              <p className="font-bold mt-3">Nearby Points:</p>
               <ul>
                 {nearbyPoints.map((point, index) => (
                   <li key={index}>
@@ -45,6 +84,7 @@ function PopupContent({ chartOptions, selectedZone, nearbyPoints, onClose }) {
               <div ref={chartContainerRef} style={{ height: "380px" }} />
             </div>
           </div>
+
           <button
             className="absolute top-2 right-2 bg-gray-300 px-4 py-2 rounded"
             onClick={handleClose}
@@ -90,7 +130,6 @@ export default function Map({ chartOptions }) {
         center: [zones[0].lng, zones[0].lat],
         zoom: zoom,
       });
-
       zones.forEach((zone) => {
         const marker = new mapboxgl.Marker({ color: "#00ff00" })
           .setLngLat([zone.lng, zone.lat])
@@ -99,15 +138,16 @@ export default function Map({ chartOptions }) {
         marker.getElement().addEventListener("click", () => {
           const popupContent = document.createElement("div");
 
+          const nearbyPointsData = findNearbyPoints(zone.lng, zone.lat);
+          setNearbyPoints(nearbyPointsData);
+
           createRoot(popupContent).render(
             <PopupContent
               chartOptions={chartOptions}
               selectedZone={zone}
-              nearbyPoints={findNearbyPoints(zone.lng, zone.lat, zone)}
+              nearbyPoints={nearbyPointsData}
             />
           );
-
-          // Append the custom HTML element to the body
           document.body.appendChild(popupContent);
         });
       });
@@ -136,6 +176,8 @@ export default function Map({ chartOptions }) {
         acc.push({
           name: zone.name,
           distance: distance.toFixed(2),
+          lat: zone.lat,
+          lng: zone.lng,
         });
       }
       return acc;

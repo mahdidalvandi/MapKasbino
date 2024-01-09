@@ -1,95 +1,18 @@
-import { useRef, useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
-import * as echarts from "echarts";
-import { createRoot } from "react-dom/client";
+import { PopupContent } from "../popUp/popUp";
 
 import "mapbox-gl/dist/mapbox-gl.css";
 
-function PopupContent({ chartOptions, selectedZone, nearbyPoints, onClose }) {
-  const [isOpen, setIsOpen] = useState(true);
-
-  const handleClose = () => {
-    setIsOpen(false);
-  };
-  const chartContainerRef = useRef(null);
-  const chartInstance = useRef(null);
-  const mapContainerRef = useRef(null);
-  const mapInstance = useRef(null);
-
-  useEffect(() => {
-    chartInstance.current = echarts.init(chartContainerRef.current);
-    chartInstance.current.setOption(chartOptions);
-
-    mapInstance.current = new mapboxgl.Map({
-      container: mapContainerRef.current,
-      style: "mapbox://styles/mapbox/streets-v11",
-      center: [selectedZone.lng, selectedZone.lat],
-      zoom: 14,
-    });
-
-    const marker = new mapboxgl.Marker({ color: "#FF0000" })
-      .setLngLat([selectedZone.lng, selectedZone.lat])
-      .addTo(mapInstance.current);
-
-    return () => {
-      if (chartInstance.current) {
-        chartInstance.current.dispose();
-      }
-      if (mapInstance.current) {
-        mapInstance.current.remove();
-      }
-    };
-  }, [chartOptions, selectedZone]);
-
-  return (
-    <>
-      {isOpen && (
-        <div className="fixed w-5/6 h-4/5 m-2 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 z-50">
-          <div className="flex h-fit">
-            <div className=" flex-col inline-grid h-fit text-nowrap">
-              <div className=" pb-8 h-fit w-fit">
-                <div
-                  ref={mapContainerRef}
-                  style={{ width: "250px", height: "250px" }}
-                />
-              </div>
-              <h3>
-                Selected Zone:{" "}
-                <p className="font-semibold text-nowrap inline-flex">
-                  {selectedZone.name}
-                </p>
-              </h3>
-              <p className="font-bold mt-3">Nearby Points:</p>
-              <ul>
-                {nearbyPoints.map((point, index) => (
-                  <li key={index}>
-                    Name: {point.name}, Distance: {point.distance} km
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="w-3/5 p-1 mt-12 ml-5">
-              <div ref={chartContainerRef} style={{ height: "380px" }} />
-            </div>
-          </div>
-
-          <button
-            className="absolute top-2 right-2 bg-gray-300 px-4 py-2 rounded"
-            onClick={handleClose}
-          >
-            Close
-          </button>
-        </div>
-      )}
-    </>
-  );
-}
-export default function Map({ chartOptions }) {
+function Map({ chartOptions }) {
   const mapContainer = useRef(null);
   const map = useRef(null);
   const [zoom] = useState(12);
   const [selectedZone, setSelectedZone] = useState(null);
   const [nearbyPoints, setNearbyPoints] = useState([]);
+
+  mapboxgl.accessToken =
+    "pk.eyJ1IjoicXVlMzIxNiIsImEiOiJjaWhxZmMxMDUwMDBzdXhsdWh0ZDkyMzVqIn0.sz3lHuX9erctIPE2ya6eCw";
 
   const zones = [
     { lng: 51.3604911, lat: 35.7290896, name: "کسبینو" },
@@ -107,9 +30,6 @@ export default function Map({ chartOptions }) {
     { lng: 51.404101, lat: 35.719225, name: "خیابان طباطبایی" },
   ];
 
-  mapboxgl.accessToken =
-    "pk.eyJ1IjoicXVlMzIxNiIsImEiOiJjaWhxZmMxMDUwMDBzdXhsdWh0ZDkyMzVqIn0.sz3lHuX9erctIPE2ya6eCw";
-
   useEffect(() => {
     if (!map.current) {
       map.current = new mapboxgl.Map({
@@ -118,29 +38,19 @@ export default function Map({ chartOptions }) {
         center: [zones[0].lng, zones[0].lat],
         zoom: zoom,
       });
-
       zones.forEach((zone) => {
         const marker = new mapboxgl.Marker({ color: "#00ff00" })
           .setLngLat([zone.lng, zone.lat])
           .addTo(map.current);
 
         marker.getElement().addEventListener("click", () => {
-          const popupContent = document.createElement("div");
-
-          createRoot(popupContent).render(
-            <PopupContent
-              chartOptions={chartOptions}
-              selectedZone={zone}
-              nearbyPoints={findNearbyPoints(zone.lng, zone.lat, zone)}
-            />
-          );
-
-          // Append the custom HTML element to the body
-          document.body.appendChild(popupContent);
+          const nearbyPointsData = findNearbyPoints(zone.lng, zone.lat);
+          setNearbyPoints(nearbyPointsData);
+          setSelectedZone(zone);
         });
       });
     }
-  }, [chartOptions, zones, zoom]);
+  }, [zones, zoom]);
 
   const findNearbyPoints = (lng, lat, selectedZone) => {
     const calculateDistance = (lng1, lat1, lng2, lat2) => {
@@ -164,6 +74,8 @@ export default function Map({ chartOptions }) {
         acc.push({
           name: zone.name,
           distance: distance.toFixed(2),
+          lat: zone.lat,
+          lng: zone.lng,
         });
       }
       return acc;
@@ -172,11 +84,19 @@ export default function Map({ chartOptions }) {
     return nearbyPoints;
   };
 
-  console.log(nearbyPoints);
-
   return (
     <div style={{ width: "100%", height: "100vh" }}>
       <div ref={mapContainer} style={{ width: "100%", height: "100%" }} />
+      {selectedZone && (
+        <PopupContent
+          chartOptions={chartOptions}
+          selectedZone={selectedZone}
+          nearbyPoints={nearbyPoints}
+          onClose={() => setSelectedZone(null)}
+        />
+      )}
     </div>
   );
 }
+
+export default Map;
