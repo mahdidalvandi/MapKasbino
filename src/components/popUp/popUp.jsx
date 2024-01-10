@@ -24,7 +24,7 @@ function PopupContent({
       container: mapContainerRef.current,
       style: "mapbox://styles/mapbox/streets-v11",
       center: [selectedZone.lng, selectedZone.lat],
-      zoom: 14,
+      zoom: 16,
     });
 
     const selectedZoneMarker = new mapboxgl.Marker({ color: "#ff0000" })
