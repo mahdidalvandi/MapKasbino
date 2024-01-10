@@ -59,23 +59,24 @@ function PopupContent({
   }, [chartOptions, selectedZone, nearbyPoints, onMapClick]);
 
   const handleMarkerClick = (point) => {
-    console.log(point);
     setSelectedPoint(point);
     const selectedZoneMarker = new mapboxgl.Marker({ color: "#ff8000" })
       .setLngLat([point.lng, point.lat])
       .addTo(mapInstance.current);
     mapInstance.current.flyTo({ center: [point.lng, point.lat] });
-    const newChartOptions = {
-      ...chartOptions,
+
+    const newData = generateNewLineData(point);
+
+    chartInstance.setOption({
       series: [
         {
           ...chartOptions.series[0],
-          data: [point.distance],
+          data: newData,
         },
       ],
-    };
-    setChartOptions(newChartOptions);
+    });
   };
+
   return (
     <div className="fixed w-5/6 h-4/5 m-2 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 z-50">
       <div className="flex h-fit">
