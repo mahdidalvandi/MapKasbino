@@ -12,3 +12,9 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
+@font-face {
+  font-family: "vazir";
+  src: url("./src/fonts/Vazir-Medium.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+}

@@ -83,16 +83,22 @@ function Map({ chartOptions }) {
 
     return nearbyPoints;
   };
+  const onMapClick = (lng, lat) => {
+    const updatedNearbyPoints = findNearbyPoints(lng, lat);
+    setNearbyPoints(updatedNearbyPoints);
+  };
 
   return (
     <div style={{ width: "100%", height: "100vh" }}>
       <div ref={mapContainer} style={{ width: "100%", height: "100%" }} />
       {selectedZone && (
         <PopupContent
+          initialChartOptions={chartOptions}
           chartOptions={chartOptions}
           selectedZone={selectedZone}
           nearbyPoints={nearbyPoints}
           onClose={() => setSelectedZone(null)}
+          onMapClick={onMapClick}
         />
       )}
     </div>

@@ -1,23 +1,24 @@
-// PopupContent.js
 import React, { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import * as echarts from "echarts";
-
 import "mapbox-gl/dist/mapbox-gl.css";
-
-function PopupContent({ chartOptions, selectedZone, nearbyPoints, onClose }) {
+function PopupContent({
+  initialChartOptions,
+  selectedZone,
+  nearbyPoints,
+  onClose,
+  onMapClick,
+}) {
   const chartContainerRef = useRef(null);
   const chartInstance = useRef(null);
   const mapContainerRef = useRef(null);
   const mapInstance = useRef(null);
-  const [isOpen, setIsOpen] = useState(true);
+  const [chartOptions, setChartOptions] = useState(initialChartOptions);
 
   useEffect(() => {
-    // Initialize ECharts chart
     chartInstance.current = echarts.init(chartContainerRef.current);
     chartInstance.current.setOption(chartOptions);
 
-    // Initialize Mapbox GL map
     mapInstance.current = new mapboxgl.Map({
       container: mapContainerRef.current,
       style: "mapbox://styles/mapbox/streets-v11",
@@ -30,9 +31,17 @@ function PopupContent({ chartOptions, selectedZone, nearbyPoints, onClose }) {
       .addTo(mapInstance.current);
 
     nearbyPoints.forEach((point) => {
+      const markerElement = document.createElement("div");
       new mapboxgl.Marker({ color: "#ff8000" })
         .setLngLat([point.lng, point.lat])
         .addTo(mapInstance.current);
+      markerElement.addEventListener("click", () => handleMarkerClick(point));
+    });
+
+    mapInstance.current.on("click", (event) => {
+      const { lng, lat } = event.lngLat;
+      onMapClick(lng, lat);
+      setChartOptions(generateUpdatedChartOptionsForMapClick());
     });
 
     const cleanup = () => {
@@ -46,62 +55,71 @@ function PopupContent({ chartOptions, selectedZone, nearbyPoints, onClose }) {
       }
     };
 
-    // Attach cleanup function to the component unmount
     return cleanup;
-  }, [chartOptions, selectedZone, nearbyPoints]);
+  }, [chartOptions, selectedZone, nearbyPoints, onMapClick]);
+
+  const handleMarkerClick = (point) => {
+    setChartOptions(generateUpdatedChartOptionsForMarkerClick(point));
+  };
+
+  const generateUpdatedChartOptionsForMapClick = () => {
+    // Your logic to update ECharts options on map click
+    return chartOptions;
+  };
+
+  const generateUpdatedChartOptionsForMarkerClick = (point) => {
+    // Your logic to update ECharts options on marker click
+    return chartOptions;
+  };
 
   return (
-    <>
-      <div className="fixed w-5/6 h-4/5 m-2 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 z-50">
-        <div className="flex h-fit">
-          <div className=" flex-col inline-grid h-fit text-nowrap">
-            <div className=" pb-8 h-fit w-fit">
-              <div
-                ref={mapContainerRef}
-                style={{ width: "250px", height: "250px" }}
-              />
-            </div>
-            <h3>
-              Selected Zone:{" "}
-              <p className="font-semibold text-nowrap inline-flex">
-                {selectedZone.name}
-              </p>
-            </h3>
-            <p className="font-bold mt-3">Nearby Points:</p>
-            <ul>
-              {nearbyPoints.map((point, index) => (
-                <li key={index}>
-                  Name: {point.name}, Distance:{" "}
-                  <span className="font-bold text-green-700">
-                    {" "}
-                    {point.distance}
-                  </span>{" "}
-                  km
-                </li>
-              ))}
-            </ul>
+    <div className="fixed  w-5/6 h-4/5 m-2 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 z-50">
+      <div className="flex h-fit">
+        <div className=" flex-col inline-grid h-fit text-nowrap">
+          <div className=" pb-8 h-fit w-fit">
+            <div
+              ref={mapContainerRef}
+              style={{ width: "250px", height: "250px" }}
+            />
           </div>
-          <div className="w-3/5 p-1 mt-12 ml-5">
-            <div ref={chartContainerRef} style={{ height: "380px" }} />
-            <div>
-              <p className="font-semibold text-right text-blue-500 mb-1">
-                ترافیک خیابان
-              </p>
-              <p className="font-semibold text-right  text-green-500  mb-1">
-                ترافیک اتوبان
-              </p>
-            </div>
+          <h3>
+            Selected Zone:{" "}
+            <p className="font-semibold text-nowrap inline-flex">
+              {selectedZone.name}
+            </p>
+          </h3>
+          <p className="font-bold mt-3">Nearby Points:</p>
+          <ul>
+            {nearbyPoints.map((point, index) => (
+              <li key={index}>
+                Name: {point.name}, Distance:{" "}
+                <span className="font-bold text-green-700">
+                  {point.distance}
+                </span>
+                km
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="w-3/5 p-1 mt-12 ml-5">
+          <div ref={chartContainerRef} style={{ height: "380px" }} />
+          <div className="flex space-x-6 items-center justify-center mt-4 text-xl">
+            <p className="font-semibold text-right text-blue-500 mb-4">
+              ترافیک خیابان
+            </p>
+            <p className="font-semibold text-right  text-green-500  mb-4">
+              ترافیک اتوبان
+            </p>
           </div>
         </div>
-
-        <button
-          className="absolute top-2 right-2 bg-gray-300 px-4 py-2 rounded"
-          onClick={onClose}
-        >
-          Close
-        </button>
       </div>
-    </>
+      <button
+        className="absolute top-2 right-2 bg-gray-300 px-4 py-2 rounded"
+        onClick={onClose}
+      >
+        Close
+      </button>
+    </div>
   );
 }
 

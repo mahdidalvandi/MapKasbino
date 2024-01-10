@@ -125,21 +125,6 @@ export default function App() {
     <div>
       <Navbar />
       <Map chartOptions={chartOptions} trafficRates={trafficRates} />
-      <div style={{ textAlign: "center", marginTop: "20px" }}>
-        <button
-          onClick={() => handleStepChange(currentStep - 1)}
-          disabled={currentStep === 0}
-        >
-          Previous Step
-        </button>
-        <span style={{ margin: "0 10px" }}>{timelineData[currentStep]}</span>
-        <button
-          onClick={() => handleStepChange(currentStep + 1)}
-          disabled={currentStep === timelineData.length - 1}
-        >
-          Next Step
-        </button>
-      </div>
     </div>
   );
 }
