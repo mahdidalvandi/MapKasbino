@@ -10,6 +10,7 @@ function Map({ chartOptions }) {
   const [zoom] = useState(12);
   const [selectedZone, setSelectedZone] = useState(null);
   const [nearbyPoints, setNearbyPoints] = useState([]);
+  console.log(selectedZone);
 
   mapboxgl.accessToken =
     "pk.eyJ1IjoicXVlMzIxNiIsImEiOiJjaWhxZmMxMDUwMDBzdXhsdWh0ZDkyMzVqIn0.sz3lHuX9erctIPE2ya6eCw";
@@ -38,14 +39,14 @@ function Map({ chartOptions }) {
         center: [zones[0].lng, zones[0].lat],
         zoom: zoom,
       });
+
       zones.forEach((zone) => {
         const marker = new mapboxgl.Marker({ color: "#00ff00" })
           .setLngLat([zone.lng, zone.lat])
           .addTo(map.current);
-
         marker.getElement().addEventListener("click", () => {
-          const nearbyPointsData = findNearbyPoints(zone.lng, zone.lat);
-          setNearbyPoints(nearbyPointsData);
+          const updatedNearbyPoints = findNearbyPoints(zone.lng, zone.lat);
+          setNearbyPoints(updatedNearbyPoints);
           setSelectedZone(zone);
         });
       });

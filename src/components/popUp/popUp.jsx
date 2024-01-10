@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import * as echarts from "echarts";
 import "mapbox-gl/dist/mapbox-gl.css";
+
 function PopupContent({
   initialChartOptions,
   selectedZone,
@@ -14,11 +15,11 @@ function PopupContent({
   const mapContainerRef = useRef(null);
   const mapInstance = useRef(null);
   const [chartOptions, setChartOptions] = useState(initialChartOptions);
-
+  const [selectedPoint, setSelectedPoint] = useState(selectedZone);
+  console.log(selectedPoint);
   useEffect(() => {
     chartInstance.current = echarts.init(chartContainerRef.current);
     chartInstance.current.setOption(chartOptions);
-
     mapInstance.current = new mapboxgl.Map({
       container: mapContainerRef.current,
       style: "mapbox://styles/mapbox/streets-v11",
@@ -41,7 +42,6 @@ function PopupContent({
     mapInstance.current.on("click", (event) => {
       const { lng, lat } = event.lngLat;
       onMapClick(lng, lat);
-      setChartOptions(generateUpdatedChartOptionsForMapClick());
     });
 
     const cleanup = () => {
@@ -59,44 +59,51 @@ function PopupContent({
   }, [chartOptions, selectedZone, nearbyPoints, onMapClick]);
 
   const handleMarkerClick = (point) => {
-    setChartOptions(generateUpdatedChartOptionsForMarkerClick(point));
+    console.log(point);
+    setSelectedPoint(point);
+    const selectedZoneMarker = new mapboxgl.Marker({ color: "#ff8000" })
+      .setLngLat([point.lng, point.lat])
+      .addTo(mapInstance.current);
+    mapInstance.current.flyTo({ center: [point.lng, point.lat] });
+    const newChartOptions = {
+      ...chartOptions,
+      series: [
+        {
+          ...chartOptions.series[0],
+          data: [point.distance],
+        },
+      ],
+    };
+    setChartOptions(newChartOptions);
   };
-
-  const generateUpdatedChartOptionsForMapClick = () => {
-    // Your logic to update ECharts options on map click
-    return chartOptions;
-  };
-
-  const generateUpdatedChartOptionsForMarkerClick = (point) => {
-    // Your logic to update ECharts options on marker click
-    return chartOptions;
-  };
-
   return (
-    <div className="fixed  w-5/6 h-4/5 m-2 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 z-50">
+    <div className="fixed w-5/6 h-4/5 m-2 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white p-6 z-50">
       <div className="flex h-fit">
-        <div className=" flex-col inline-grid h-fit text-nowrap">
-          <div className=" pb-8 h-fit w-fit">
+        <div className="flex-col inline-grid h-fit text-nowrap">
+          <div className="pb-8 h-fit w-fit">
             <div
               ref={mapContainerRef}
               style={{ width: "250px", height: "250px" }}
             />
           </div>
           <h3>
-            Selected Zone:{" "}
+            Selected Zone
             <p className="font-semibold text-nowrap inline-flex">
-              {selectedZone.name}
+              {selectedPoint.name}
             </p>
           </h3>
-          <p className="font-bold mt-3">Nearby Points:</p>
+          <p className="font-bold mt-3 text-red-600">Nearby Points:</p>
           <ul>
             {nearbyPoints.map((point, index) => (
-              <li key={index}>
-                Name: {point.name}, Distance:{" "}
+              <li
+                key={index}
+                onClick={() => handleMarkerClick(point)}
+                className="flex items-center py-1 cursor-pointer transition-colors hover:bg-gray-100"
+              >
+                <span className="mr-2">Name: {point.name}, Distance:</span>
                 <span className="font-bold text-green-700">
-                  {point.distance}
+                  {point.distance} km
                 </span>
-                km
               </li>
             ))}
           </ul>
@@ -107,7 +114,7 @@ function PopupContent({
             <p className="font-semibold text-right text-blue-500 mb-4">
               ترافیک خیابان
             </p>
-            <p className="font-semibold text-right  text-green-500  mb-4">
+            <p className="font-semibold text-right text-green-500 mb-4">
               ترافیک اتوبان
             </p>
           </div>

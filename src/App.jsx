@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Navbar from "./components/navbar/navbar";
 import Map from "./components/map/map";
+import { center } from "@turf/turf";
 
 export default function App() {
   const timelineData = [
@@ -59,7 +60,12 @@ export default function App() {
         },
       },
       title: {
-        text: "اطلاعات محدوده انتخاب شده",
+        text: "ترافیک محدوده انتخاب شده در ۲۴ ساعت شبانه روز",
+        textStyle: {
+          color: "#333",
+          fontSize: 20,
+          fontWeight: "bold",
+        },
       },
       xAxis: {
         type: "category",
